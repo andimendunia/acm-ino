@@ -1,6 +1,5 @@
 //nextion masih error data tidak muncul
-//coba pull
-
+//nilai pitch_mm apakah sama dengan shoedistance ?
 #include "EasyNextionLibrary.h"
 
 #define encoderA 2  //Output A from rotary encoder,CW maka LOW TO HIGH, CCW maka HIGH TO LOW
@@ -14,7 +13,7 @@ int     loop_ms	    = 1000;   // Mau seberapa lama tiap loop nya?
 
 int     pulses      = 0;      // Inisialisasi pulse untuk wadah counter
 
-int     pitch_mm    = 0;      // Jarak antar garis kuning sepatu yang ada di conveyor
+int     pitch_mm    = 330;      // Jarak antar garis kuning sepatu yang ada di conveyor
 
 int     speed_std   = 0;
 float   speed       = 0;      // Inisialiasi speed (mm/s)
