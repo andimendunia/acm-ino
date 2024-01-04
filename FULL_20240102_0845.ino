@@ -1,3 +1,4 @@
+//test
 #include "EasyNextionLibrary.h"
 
 const int encoderA = 2; //Output A from rotary encoder
