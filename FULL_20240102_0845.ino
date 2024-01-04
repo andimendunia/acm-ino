@@ -1,3 +1,5 @@
+//nextion masih error data tidak muncul
+
 #include "EasyNextionLibrary.h"
 
 #define encoderA 2  //Output A from rotary encoder,CW maka LOW TO HIGH, CCW maka HIGH TO LOW
