@@ -1,4 +1,5 @@
 //nextion masih error data tidak muncul
+//coba pull
 
 #include "EasyNextionLibrary.h"
 
