@@ -1,12 +1,14 @@
 void readnex() {
-  str_down = myNex.readStr("t6.txt");
-  str_up = myNex.readStr("t7.txt");
-  if (((str_down == "ERROR") || (str_down == "")) && ((str_up == "ERROR") || (str_up == ""))) {
-    standarddown = standarddown;
-    standardup = standardup;
+
+  rate_min_s = myNex.readStr("t6.txt");
+  rate_max_s = myNex.readStr("t7.txt");
+  if (((rate_min_s == "ERROR") || (rate_min_s == "")) && ((rate_max_s == "ERROR") || (rate_max_s == ""))) {
+    rate_min_i = rate_min_i;
+    rate_max_i = rate_max_i;
   } else {
-    standarddown = str_down.toFloat();
-    standardup = str_up.toFloat();
-    myNex.writeStr("t8.txt", save);
+    rate_min_i = rate_min_s.toFloat();
+    rate_max_i = rate_max_s.toFloat();
+    myNex.writeStr("t8.txt", msg_simpan);
   }
+
 }

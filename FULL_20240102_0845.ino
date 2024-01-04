@@ -1,46 +1,40 @@
 #include "EasyNextionLibrary.h"
 
-#define encoderA 2 //Output A from rotary encoder,CW maka LOW TO HIGH, CCW maka HIGH TO LOW
-#define encoderB 3 //Output B from rotary encoder,CW maka LOW TO HIGH, CCW maka HIGH TO LOW
+#define encoderA 2  //Output A from rotary encoder,CW maka LOW TO HIGH, CCW maka HIGH TO LOW
+#define encoderB 3  //Output B from rotary encoder,CW maka LOW TO HIGH, CCW maka HIGH TO LOW
 
-float pulses = 0;
-float rpm = 0;
-float rps = 0;
+int     dist_mm	    = 10;     // Dari spek autonics, jarak tiap pulse
+int     circ_mm	    = 250;    // Dari spek autonics, keliling roda
+int     ppr		      = 100;    // Dari spek autonics, pulse tiap putaran
+int     ratio		    = 4;      // Dari spek autonics, perbandingan gear
+int     loop_ms	    = 1000;   // Mau seberapa lama tiap loop nya?
 
-float pulsesperturn = 4096; // pulsa yang dibutuhkan untuk menyelesaikan 1 putaran
-float wheel_circumference_mm = 220; // 70 apa ?
+int     pulses      = 0;      // Inisialisasi pulse untuk wadah counter
 
-float velocity = 0;
-int fix_velocity = 0;
+int     pitch_mm    = 0;      // Jarak antar garis kuning sepatu yang ada di conveyor
 
-float shoepairs = 0;
-int fix_shoepairs = 0;
+int     speed_std   = 0;
+float   speed       = 0;      // Inisialiasi speed (mm/s)
+int     speed_i     = 0;      // Inisialisasi speed (mm/s) versi integer
 
-float standarddown = 7;
-int fix_standarddown = 0;
+float   rate_min    = 7;
+int     rate_min_i  = 0;
+String  rate_min_s  = "";
 
-float standardspeed = 0;
-int fix_standardspeed = 0;
+float   rate_max    = 100;
+int     rate_max_i  = 0;
+String  rate_max_s  = "";
 
-float standardup = 100;
-int shoedistance = 330;
+float   rate_act    = 0;
+int     rate_act_i  = 0;
 
-String str_up = "0";
-String str_down = "0";
-String save = "Data tersimpan";
+String  msg_simpan = "Data tersimpan"; 
 
-//===============================
-unsigned long sampling_timeold;
-const unsigned long interval_timeold = 5000;
+float dpp = (dist_mm * ratio);  // distance per pulse  
 
-unsigned long sampling_senddata_py;
-const unsigned long interval_senddata_py = 5000;
-//===============================
+unsigned long time_last = 0;    // markah atau penanda waktu terakhir loop sebelumnya di eksekusi
 
-unsigned long lastDebounceTime[2] = {0, 0}; // Separate for each encoder pin
-const unsigned long debounceDelay = 50; // Adjust delay as needed ms
-
-EasyNex myNex(Serial2);
+EasyNex myNex(Serial);
 
 void setup() {
   Serial.begin(9600);
@@ -48,61 +42,45 @@ void setup() {
   pinMode(encoderA, INPUT_PULLUP);
   pinMode(encoderB, INPUT_PULLUP);
 
-// susunan yang mau di kirim ke python masih belum tau urutannya udah sama atau belum
-//  Serial.print("Pulses/sec ");
-//  Serial.print("Seconds ");
-  Serial.print("RPM ");
-  Serial.print("Pulses ");
-  Serial.print("Velocity[mm/s] ");
-  Serial.println("Shoepairs ");
-
-  attachInterrupt(digitalPinToInterrupt(encoderA), counter, RISING);
-  attachInterrupt(digitalPinToInterrupt(encoderB), counter1, RISING);
+  attachInterrupt(digitalPinToInterrupt(encoderA), counter_2, RISING);      // cw (kabel ke kanan) ccw (kabel ke kiri)
+  // attachInterrupt(digitalPinToInterrupt(encoderB), counter_3, RISING);
 }
 
 void loop() {
   myNex.NextionListen();
   readnex();
-  unsigned long currentTime = millis();
-  if (currentTime - sampling_timeold >= interval_timeold) {
-    rps = pulses / pulsesperturn;
-    rpm = rps * 60;
-    velocity = ceil((rps * wheel_circumference_mm) / 5);
-
-    if (velocity <= 0) {
-      shoepairs = 0;
+  if (millis() - time_last >= loop_ms) {
+    speed = (dpp * 1 / ppr * pulses) / (loop_ms / 1000);
+    Serial.print ("Block loop speed: ");
+    Serial.println (speed);
+    if (speed <= 0) {
+      rate_act = 0;
     } else {
-      shoepairs = shoedistance / velocity;
+      rate_act = pitch_mm / speed;
     }
     readnex();
     writenex();
-    sampling_timeold = currentTime;
-  }
-// susunan yang mau di kirim ke python masih belum tau urutannya udah sama atau belum
-  if (currentTime - sampling_senddata_py >= interval_senddata_py) {
-    Serial.println(String(rpm) + "," + String(pulses) + "," + String(velocity) + "," + String(shoepairs));
-    sampling_senddata_py = currentTime;
+    pulses = 0;
+    Serial.println(String(rate_min_s) + "," + String(rate_max_s) + "," + String(rate_act) + "," + String(pulses));
+    time_last = millis();
   }
 }
 
-void counter() {
-  int pinA = digitalRead(encoderA);
-  if (pinA == HIGH && millis() - lastDebounceTime[0] >= debounceDelay) {
+void counter_2() {
+  if (digitalRead(3) == HIGH) {
     pulses++;
-    lastDebounceTime[0] = millis();
-    Serial.println("DIproses di encoderA");
+    Serial.print ("Block counter_2: ");
+    Serial.println (pulses);
   } else {
     pulses = pulses;
   }
 }
 
-void counter1() {
-  int pinB = digitalRead(encoderB);
-  if (pinB == HIGH && millis() - lastDebounceTime[1] >= debounceDelay) {
+void counter_3() {
+  if (digitalRead(2) == HIGH) {
     pulses++;
-    lastDebounceTime[1] = millis();
-    Serial.println("DIproses di encoderB");
-    delay(5000);
+    Serial.println("Block counter_3:" );
+    Serial.println (pulses);
   } else {
     pulses = pulses;
   }
