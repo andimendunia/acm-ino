@@ -1,5 +1,5 @@
 //nextion masih error data tidak muncul
-//nilai pitch_mm apakah sama dengan shoedistance ?
+//nilai pitch_mm apakah sama dengan shoedistance?
 #include "EasyNextionLibrary.h"
 
 #define encoderA 2  //Output A from rotary encoder,CW maka LOW TO HIGH, CCW maka HIGH TO LOW
@@ -36,7 +36,10 @@ float dpp = (dist_mm * ratio);  // distance per pulse
 
 unsigned long time_last = 0;    // markah atau penanda waktu terakhir loop sebelumnya di eksekusi
 
-EasyNex myNex(Serial);
+EasyNex myNex(Serial); //RX0,TX1
+// EasyNex myNex(Serial1);//RX19,TX18
+// EasyNex myNex(Serial2);//RX17,TX16
+// EasyNex myNex(Serial3);//RX15,TX14
 
 void setup() {
   Serial.begin(9600);
@@ -50,7 +53,7 @@ void setup() {
 
 void loop() {
   myNex.NextionListen();
-  readnex();
+  // readnex();
   if (millis() - time_last >= loop_ms) {
     speed = (dpp * 1 / ppr * pulses) / (loop_ms / 1000);
     Serial.print ("Block loop speed: ");
@@ -61,7 +64,7 @@ void loop() {
       rate_act = pitch_mm / speed;
     }
     readnex();
-    writenex();
+    // writenex();
     pulses = 0;
     Serial.println(String(rate_min_s) + "," + String(rate_max_s) + "," + String(rate_act) + "," + String(pulses));
     time_last = millis();
