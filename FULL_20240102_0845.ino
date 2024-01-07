@@ -18,34 +18,34 @@
 //int     loop_ms     = 1000;   // Mau seberapa lama tiap loop nya?
 ////====================================================================
 //===============encoder ASM==========================================
-int     dist_mm     = 0.1074;   // hitung MMU =(circ_mm/ppr)
-int     circ_mm     = 220;      // Dari spek autonics, keliling roda
-int     ppr         = 2048;     // Dari spek autonics, pulse tiap putaran
-int     ratio       = 1;        // hitung GR = ((circ_mm)/(dist_mm*ppr))
-int     loop_ms     = 1000;     // Mau seberapa lama tiap loop nya?
+int     dist_mm       = 0.1074;   // hitung MMU =(circ_mm/ppr)
+int     circ_mm       = 220;      // Dari spek autonics, keliling roda
+int     ppr           = 2048;     // Dari spek autonics, pulse tiap putaran
+int     ratio         = 1;        // hitung GR = ((circ_mm)/(dist_mm*ppr))
+int     loop_ms       = 1000;     // Mau seberapa lama tiap loop nya?
 ////====================================================================
 
-int     pulses      = 0;        // Inisialisasi pulse untuk wadah counter
-int     pitch_mm    = 330;      // Jarak antar garis kuning sepatu yang ada di conveyor
+int     pulses        = 0;        // Inisialisasi pulse untuk wadah counter
+int     pitch_mm      = 330;      // Jarak antar garis kuning sepatu yang ada di conveyor
 
-int     speed_std   = 0;
-float   speed       = 0;        // Inisialiasi speed (mm/s)
-int     speed_i     = 0;        // Inisialisasi speed (mm/s) versi integer
+int     speed_std     = 0;
+float   speed         = 0;        // Inisialiasi speed (mm/s)
+int     speed_i       = 0;        // Inisialisasi speed (mm/s) versi integer
 
-float   rate_min    = 7;
-int     rate_min_i  = 0;
-String  rate_min_s  = "";
+float   rate_min      = 7;
+int     rate_min_i    = 0;
+String  rate_min_s    = "";
 
-float   rate_max    = 100;
-int     rate_max_i  = 0;
-String  rate_max_s  = "";
+float   rate_max      = 100;
+int     rate_max_i    = 0;
+String  rate_max_s    = "";
 
-float   rate_act    = 0;
-int     rate_act_i  = 0;
+float   rate_act      = 0;
+int     rate_act_i    = 0;
 
-String  msg_simpan = "Data tersimpan";
+String  msg_simpan    = "Data tersimpan";
 
-float dpp = (dist_mm * ratio);  // distance per pulse
+float dpp             = (dist_mm * ratio);  // distance per pulse
 
 unsigned long time_last = 0;    // markah atau penanda waktu terakhir loop sebelumnya di eksekusi
 
@@ -63,63 +63,23 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(encoderA), counter_2, RISING);      // cw (kabel ke kanan) ccw (kabel ke kiri)
   // attachInterrupt(digitalPinToInterrupt(encoderB), counter_3, RISING);
 }
-////===============tanpa rata rata==========================================
-//void loop() {
-//  myNex.NextionListen();
-//  readnex();
-//  if (millis() - time_last >= loop_ms) {
-//    //    speed = (dpp * 1 / ppr * pulses) / (loop_ms / 1000); //rumus pertama
-//    //    speed = (pulses * circ_mm) / (ppr * (loop_ms / 1000)); //rumus kedua
-//    Serial.print ("Pulses: ");
-//    Serial.print (pulses);
-//    Serial.print (", speed: ");
-//    Serial.print (speed);
-//    if (speed <= 0) {
-//      rate_act = 0;
-//    } else {
-//      rate_act = pitch_mm / speed;
-//    }
-//    Serial.print (", rate_act: ");
-//    Serial.println (rate_act);
-//    readnex();
-//    writenex();
-//    pulses = 0;
-//    //    Serial.println(String(rate_min_s) + "," + String(rate_max_s) + "," + String(rate_act) + "," + String(pulses));
-//    time_last = millis();
-//  }
-//}
-////====================================================================
-////===============rata rata==========================================
 void loop() {
   myNex.NextionListen();
   readnex();
   if (millis() - time_last >= loop_ms) {
-    // Accumulate pulses over multiple loop iterations
-    static int pulseCount = 0;
-    static int pulseTotal = 0;
-    static const int numReadings = 8; // Adjust this value as needed 16-32
-
-    pulseCount++;
-    pulseTotal += pulses;
-
-    // Calculate average pulses when enough readings are available
-    if (pulseCount >= numReadings) {
-      float avgPulses = (float)pulseTotal / numReadings;
-
-      // Calculate speed using the average pulses
-      speed = (dpp * 1 / ppr * avgPulses) / (loop_ms / 1000);
-      //      speed = (avgPulses * circ_mm) / (ppr * (loop_ms / 1000));
-      
-      // Reset pulse accumulation for the next average
-      pulseCount = 0;
-      pulseTotal = 0;
-
-      // Print the calculated speed
-      Serial.print("Pulses: ");
-      Serial.print(avgPulses);
-      Serial.print(", speed: ");
-      Serial.print(speed);
+    //    speed = (dpp * 1 / ppr * pulses) / (loop_ms / 1000); //rumus pertama
+    //    speed = (pulses * circ_mm) / (ppr * (loop_ms / 1000)); //rumus kedua
+    Serial.print ("Pulses: ");
+    Serial.print (pulses);
+    Serial.print (", speed: ");
+    Serial.print (speed);
+    if (speed <= 0) {
+      rate_act = 0;
+    } else {
+      rate_act = pitch_mm / speed;
     }
+    Serial.print (", rate_act: ");
+    Serial.println (rate_act);
     readnex();
     writenex();
     pulses = 0;
@@ -127,7 +87,7 @@ void loop() {
     time_last = millis();
   }
 }
-////====================================================================
+
 void counter_2() {
   if (digitalRead(3) == HIGH) {
     pulses++;
