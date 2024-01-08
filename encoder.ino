@@ -14,16 +14,11 @@ Encoder myEncoder(encoderA, encoderB);
 // Deklarasi awal pulse dibaca dari 0
 volatile long pulses  = 0;
 
-// Callback function
-void callback() {
-  pulses  = 0;
-}
-
 // Encoder interrupts ketika mencapai nilai pulsa = 3072
 void interrupts_encoder() {
   pulses++;
   if (pulses == 3072) {
-    callback();
+    pulses  = 0;  // Callback function
   }
 }
 
@@ -37,7 +32,7 @@ void loop() {
   // Baca nilai pulsa dari encoder
   //  long pulses = myEncoder.read();
   // Dummy baca pulse
-  long pulses = 3072;
+  pulses = 3072;
 
   float distance = (pulses * circ_mm) / ppr;
 
