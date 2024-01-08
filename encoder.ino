@@ -30,7 +30,7 @@ void setup() {
 
 void loop() {
   // Baca nilai pulsa dari encoder
-  //  long pulses = myEncoder.read();
+  // pulses = myEncoder.read();
   // Dummy baca pulse
   pulses = 3072;
 
