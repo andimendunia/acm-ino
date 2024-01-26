@@ -51,7 +51,7 @@ void loop() {
 
     // Baca pulsa menggunakan library si Paul
     // pulseCount = abs(myEncoder.read());
-      pulseCount  = 8924;
+      pulseCount  = 8924; //dummy
 
     // Hitung speed (jarak (pulseCount / ppmm) bagi waktu (duration ms jadi s))
     float ppmm    = (ppr / circ);
@@ -66,13 +66,13 @@ void loop() {
 
 //buat kondisi awal t1,t5 ngirim angka minimal yang awalnya dari nextion (berarti yg rubah t9+t10)
 void nexcom() {
-  rateMinStr = myNex.readStr("t1.txt");
-  rateMaxStr = myNex.readStr("t5.txt");
+  rateMinStr = myNex.readStr("rateMin.txt");
+  rateMaxStr = myNex.readStr("rateMax.txt");
    if (((rateMinStr == "")) && (rateMaxStr == "")) {
     rateMinInt = 7;   //untuk batas min eeprom
     rateMaxInt = 10;  //untuk batas max eeprom
-    myNex.writeStr("t1.txt", String(rateMinInt));
-    myNex.writeStr("t5.txt", String(rateMaxInt));
+    myNex.writeStr("rateMin.txt", String(rateMinInt));
+    myNex.writeStr("rateMax.txt", String(rateMaxInt));
 
   } else {
     rateMinInt = rateMinStr.toFloat();
@@ -83,11 +83,11 @@ void nexcom() {
   rateActInt  = ceil(rateAct); // ceil bulat ke atas
   speedStd    = pitch / rateMinInt;
 
-  myNex.writeStr("t0.txt", String(speedStd));
+  myNex.writeStr("speedStd.txt", String(speedStd));
   
-  myNex.writeStr("t2.txt", String(speedInt));
-  myNex.writeStr("t3.txt", String(rateActInt)); 
-  myNex.writeStr("t4.txt", String(pulseCount));
+  myNex.writeStr("speed.txt", String(speedInt));
+  myNex.writeStr("rateActRound.txt", String(rateActInt)); 
+  myNex.writeStr("pulse.txt", String(pulseCount));
 
   if (rateActInt >= rateMinInt && rateActInt <= rateMaxInt) {
     myNex.writeNum("t2.pic", 3);//hijau
