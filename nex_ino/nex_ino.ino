@@ -1,6 +1,10 @@
 #include <Encoder.h>                                //library encoder
 #include <EasyNextionLibrary.h>                     //library nextion
-#include <EEPROM.h>
+//#include <SoftwareSerial.h>                       //library SoftwareSerial  
+//#include <EEPROM.h>                                 //library EEPROM
+
+//// Deklarasi Pin TRANSMIT
+//#define enTxPin 4                                 //HIGH: TX and LOW: RX (RE DE RS485 SOLDER)
 
 // Deklarasi Pin Encoder
 #define encoderA 2                                  //output A rotary encoder
@@ -34,12 +38,27 @@ int speedStd                 = 0;
 int rateMinInt               = 0;
 int rateMaxInt               = 0;
 
+//// Communication RS485 with arduino
+//SoftwareSerial mySerial(19, 18); //RX19,TX18
+
+// Communication nextion with arduino
+//EasyNex myNex(Serial);  //RX0,TX0
 EasyNex myNex(Serial3);//RX15,TX14
+// EasyNex myNex(Serial1);//RX19,TX18
+// EasyNex myNex(Serial2);//RX17,TX16
+
+void(* SetReset) (void)   = 0;
+int ResetCounter          = 0;
+int MaxReset              = 10; //Setiap data ke 10 maka akan dilakukan reset
 
 void setup() {
-  Serial.begin(9600);
-  myNex.begin(9600);
+  Serial.begin(9600); //kirim di serial monitor
+  myNex.begin(9600);  //kirim ke nextion
   delay(1000);
+
+  //mySerial.begin(9600); //kirim ke RS485
+  //pinMode       (enTxPin, OUTPUT);
+  //digitalWrite  (enTxPin, HIGH);// default TX untuk transmit data
 }
 
 void loop() {
@@ -59,35 +78,55 @@ void loop() {
     rateAct       = speed > 0 ? (pitch / speed) : 0;
 
     nexcom();
-    Serial.println(String(rateMinInt) + "," + String(rateMaxInt) + "," + String(rateActInt) + "," + String(pulseCount)); 
-    myEncoder.write(0);  // Kembalikan pulsa untuk siklus selanjutnya
+    ResetCounter++;
+
+    if(ResetCounter >= MaxReset){
+      ResetCounter = 0;            
+      Serial.println("Reset Arduino");
+      Serial.println();
+      delay(1000);
+      SetReset();
+      Serial.println("Pesan Reset tidak akan muncul di Serial Monitor");
+    }
+    else{
+      Serial.println(String(rateMinInt) + "," + String(rateMaxInt) + "," + String(rateActInt) + "," + String(pulseCount)); 
+      myEncoder.write(0);  // Kembalikan pulsa untuk siklus selanjutnya
+    }
   }
 }
 
-//buat kondisi awal t1,t5 ngirim angka minimal yang awalnya dari nextion (berarti yg rubah t9+t10)
 void nexcom() {
-  rateMinStr = myNex.readStr("rateMin.txt");
-  rateMaxStr = myNex.readStr("rateMax.txt");
+  rateMinStr = myNex.readStr("rateMin.txt");     //t9.txt dikirim ke t1.txt
+  rateMaxStr = myNex.readStr("rateMax.txt");     //t10.txt dikirim ke t5.txt
+// //==========coba dipakai EEPROM UPDATE================= 
+//  int x = rateMinStr.toInt();
+//  int y = rateMaxStr .toInt();
+//  EEPROM.update(rateMinInt, x);
+//  EEPROM.update(rateMaxInt, y); 
+  
    if (((rateMinStr == "")) && (rateMaxStr == "")) {
-    rateMinInt = 7;   //untuk batas min eeprom
-    rateMaxInt = 10;  //untuk batas max eeprom
-    myNex.writeStr("rateMin.txt", String(rateMinInt));
-    myNex.writeStr("rateMax.txt", String(rateMaxInt));
+////=========coba dipakai EEPROM READ===================== 
+//    rateMinInt = EEPROM.read(x);
+//    rateMaxInt = EEPROM.read(y); 
 
+    rateMinInt = 7;   //untuk batas min eeprom
+    rateMaxInt = 10;  //untuk batas max eeprom    
+    myNex.writeStr("rateMin.txt", String(rateMinInt));  //t9.txt
+    myNex.writeStr("rateMax.txt", String(rateMaxInt));  //t10.txt
   } else {
     rateMinInt = rateMinStr.toFloat();
     rateMaxInt = rateMaxStr.toFloat();
   }
 
   speedInt    = speed;
-  rateActInt  = ceil(rateAct); // ceil bulat ke atas
+  rateActInt  = round(rateAct); // ceil bulat ke atas
   speedStd    = pitch / rateMinInt;
 
-  myNex.writeStr("speedStd.txt", String(speedStd));
+  myNex.writeStr("speedStd.txt", String(speedStd));             //t0.txt
   
-  myNex.writeStr("speed.txt", String(speedInt));
-  myNex.writeStr("rateActRound.txt", String(rateActInt)); 
-  myNex.writeStr("pulse.txt", String(pulseCount));
+  myNex.writeStr("speed.txt", String(speedInt));                //t2.txt
+  myNex.writeStr("rateActRound.txt", String(rateActInt));       //t3.txt
+  myNex.writeStr("pulse.txt", String(pulseCount));              //t4.txt
 
   if (rateActInt >= rateMinInt && rateActInt <= rateMaxInt) {
     myNex.writeNum("t2.pic", 3);//hijau
