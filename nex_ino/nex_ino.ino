@@ -1,7 +1,7 @@
 #include <Encoder.h>                                //library encoder
 #include <EasyNextionLibrary.h>                     //library nextion
 //#include <SoftwareSerial.h>                       //library SoftwareSerial  
-//#include <EEPROM.h>                                 //library EEPROM
+// #include <EEPROM.h>                                 //library EEPROM
 
 //// Deklarasi Pin TRANSMIT
 //#define enTxPin 4                                 //HIGH: TX and LOW: RX (RE DE RS485 SOLDER)
@@ -13,9 +13,13 @@
 // Pengaturan encoder
 Encoder myEncoder(encoderA, encoderB);              //ambil dari definisi di atas
 
+// //Hitung PPMM
+// const int ppr                = 2048 * 4;            //pulse per revolution encoder ASM
+// const float circ             = 220;                 //dalam mm
+
 //Hitung PPMM
-const int ppr                = 2048 * 4;            //pulse per revolution encoder ASM
-const float circ             = 220;                 //dalam mm
+const int ppr                = 100;                 //pulse per revolution encoder Autonic
+const float circ             = 250;                 //dalam mm
 
 //Hitung Speed
 float speed                  = 0;                  //Inisialiasi speed (mm/s)
@@ -49,7 +53,7 @@ EasyNex myNex(Serial3);//RX15,TX14
 
 void(* SetReset) (void)   = 0;
 int ResetCounter          = 0;
-int MaxReset              = 10; //Setiap data ke 10 maka akan dilakukan reset
+int MaxReset              = 30; //Setiap data ke 30 maka akan dilakukan reset
 
 void setup() {
   Serial.begin(9600); //kirim di serial monitor
@@ -69,8 +73,8 @@ void loop() {
     lastTime = currentTime;
 
     // Baca pulsa menggunakan library si Paul
-    // pulseCount = abs(myEncoder.read());
-      pulseCount  = 8924; //dummy
+    pulseCount = abs(myEncoder.read());
+      // pulseCount  = 8924; //dummy
 
     // Hitung speed (jarak (pulseCount / ppmm) bagi waktu (duration ms jadi s))
     float ppmm    = (ppr / circ);
@@ -106,8 +110,8 @@ void nexcom() {
   
    if (((rateMinStr == "")) && (rateMaxStr == "")) {
 ////=========coba dipakai EEPROM READ===================== 
-//    rateMinInt = EEPROM.read(x);
-//    rateMaxInt = EEPROM.read(y); 
+  //  rateMinInt = EEPROM.read(x);
+  //  rateMaxInt = EEPROM.read(y); 
 
     rateMinInt = 7;   //untuk batas min eeprom
     rateMaxInt = 10;  //untuk batas max eeprom    
@@ -129,10 +133,10 @@ void nexcom() {
   myNex.writeStr("pulse.txt", String(pulseCount));              //t4.txt
 
   if (rateActInt >= rateMinInt && rateActInt <= rateMaxInt) {
-    myNex.writeNum("t2.pic", 3);//hijau
-    myNex.writeNum("t3.pic", 4);
+    myNex.writeNum("speed.pic", 3);//hijau
+    myNex.writeNum("rateActRound.pic", 4);
   } else {
-    myNex.writeNum("t2.pic", 5);
-    myNex.writeNum("t3.pic", 6);//warna merah
+    myNex.writeNum("speed.pic", 5);
+    myNex.writeNum("rateActRound.pic", 6);//warna merah
   }
 }
