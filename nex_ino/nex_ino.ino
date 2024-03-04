@@ -1,7 +1,6 @@
 #include <Encoder.h>                                //library encoder
 #include <EasyNextionLibrary.h>                     //library nextion
 //#include <SoftwareSerial.h>                       //library SoftwareSerial  
-// #include <EEPROM.h>                                 //library EEPROM
 
 //// Deklarasi Pin TRANSMIT
 //#define enTxPin 4                                 //HIGH: TX and LOW: RX (RE DE RS485 SOLDER)
@@ -47,19 +46,18 @@ int rateMaxInt               = 0;
 
 // Communication nextion with arduino
 //EasyNex myNex(Serial);  //RX0,TX0
-EasyNex myNex(Serial3);//RX15,TX14
+//EasyNex myNex(Serial3);//RX15,TX14
 // EasyNex myNex(Serial1);//RX19,TX18
-// EasyNex myNex(Serial2);//RX17,TX16
-
-void(* SetReset) (void)   = 0;
-int ResetCounter          = 0;
-int MaxReset              = 30; //Setiap data ke 30 maka akan dilakukan reset
+ EasyNex myNex(Serial2);//RX17,TX16
 
 void setup() {
-  Serial.begin(9600); //kirim di serial monitor
+  Serial.begin(9600);   // reenable serial again
+  delay(500);
+  while (!Serial) { 
+    ; // wait for serial port to connect. Needed for native USB
+  }
   myNex.begin(9600);  //kirim ke nextion
-  delay(1000);
-
+  delay(500); 
   //mySerial.begin(9600); //kirim ke RS485
   //pinMode       (enTxPin, OUTPUT);
   //digitalWrite  (enTxPin, HIGH);// default TX untuk transmit data
@@ -73,8 +71,8 @@ void loop() {
     lastTime = currentTime;
 
     // Baca pulsa menggunakan library si Paul
-    pulseCount = abs(myEncoder.read());
-      // pulseCount  = 8924; //dummy
+//    pulseCount = abs(myEncoder.read());
+       pulseCount  = 8924; //dummy
 
     // Hitung speed (jarak (pulseCount / ppmm) bagi waktu (duration ms jadi s))
     float ppmm    = (ppr / circ);
@@ -82,37 +80,16 @@ void loop() {
     rateAct       = speed > 0 ? (pitch / speed) : 0;
 
     nexcom();
-    ResetCounter++;
-
-    if(ResetCounter >= MaxReset){
-      ResetCounter = 0;            
-      Serial.println("Reset Arduino");
-      Serial.println();
-      delay(1000);
-      SetReset();
-      Serial.println("Pesan Reset tidak akan muncul di Serial Monitor");
-    }
-    else{
-      Serial.println(String(rateMinInt) + "," + String(rateMaxInt) + "," + String(rateActInt) + "," + String(pulseCount)); 
-      myEncoder.write(0);  // Kembalikan pulsa untuk siklus selanjutnya
-    }
+    Serial.println(String(rateMinInt) + "," + String(rateMaxInt) + "," + String(rateActInt) + "," + String(pulseCount)); 
+    myEncoder.write(0);  // Kembalikan pulsa untuk siklus selanjutnya
   }
 }
 
 void nexcom() {
   rateMinStr = myNex.readStr("rateMin.txt");     //t9.txt dikirim ke t1.txt
   rateMaxStr = myNex.readStr("rateMax.txt");     //t10.txt dikirim ke t5.txt
-// //==========coba dipakai EEPROM UPDATE================= 
-//  int x = rateMinStr.toInt();
-//  int y = rateMaxStr .toInt();
-//  EEPROM.update(rateMinInt, x);
-//  EEPROM.update(rateMaxInt, y); 
   
    if (((rateMinStr == "")) && (rateMaxStr == "")) {
-////=========coba dipakai EEPROM READ===================== 
-  //  rateMinInt = EEPROM.read(x);
-  //  rateMaxInt = EEPROM.read(y); 
-
     rateMinInt = 7;   //untuk batas min eeprom
     rateMaxInt = 10;  //untuk batas max eeprom    
     myNex.writeStr("rateMin.txt", String(rateMinInt));  //t9.txt
